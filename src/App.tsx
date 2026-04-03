@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import NavBar from './components/ui/NavBar'
 
 // Auth
 import LoginPage from './pages/auth/LoginPage'
@@ -38,26 +39,32 @@ function AppRoutes() {
 
   if (user.role === 'patient') {
     return (
-      <Routes>
-        <Route path="/" element={<PatientHomePage />} />
-        <Route path="/session/:planExerciseId" element={<ExerciseSessionPage />} />
-        <Route path="/session/complete" element={<SessionCompletePage />} />
-        <Route path="/history" element={<PatientHistoryPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="pb-20">
+        <Routes>
+          <Route path="/" element={<PatientHomePage />} />
+          <Route path="/session/:planExerciseId" element={<ExerciseSessionPage />} />
+          <Route path="/session/complete" element={<SessionCompletePage />} />
+          <Route path="/history" element={<PatientHistoryPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <NavBar />
+      </div>
     )
   }
 
   // physio routes
   return (
-    <Routes>
-      <Route path="/" element={<PatientListPage />} />
-      <Route path="/patients/:patientId" element={<PatientDetailPage />} />
-      <Route path="/patients/:patientId/plans/new" element={<PlanBuilderPage />} />
-      <Route path="/patients/:patientId/plans/:planId/edit" element={<PlanBuilderPage />} />
-      <Route path="/exercises" element={<ExerciseLibraryPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <div className="pb-20">
+      <Routes>
+        <Route path="/" element={<PatientListPage />} />
+        <Route path="/patients/:patientId" element={<PatientDetailPage />} />
+        <Route path="/patients/:patientId/plans/new" element={<PlanBuilderPage />} />
+        <Route path="/patients/:patientId/plans/:planId/edit" element={<PlanBuilderPage />} />
+        <Route path="/exercises" element={<ExerciseLibraryPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <NavBar />
+    </div>
   )
 }
 
