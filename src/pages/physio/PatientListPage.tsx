@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import type { User } from '../../lib/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
+import { Plus, X, Users, ChevronRight } from 'lucide-react'
 
 export default function PatientListPage() {
   const { user } = useAuth()
@@ -32,7 +37,6 @@ export default function PatientListPage() {
     setInviteError(null)
     setInviting(true)
 
-    // First, try to link an existing patient by email
     const { data: existingUser } = await supabase
       .from('users')
       .select('id, role, physio_id')
@@ -56,7 +60,6 @@ export default function PatientListPage() {
         return
       }
 
-      // Link existing patient to this physio
       const { error } = await supabase
         .from('users')
         .update({ physio_id: user!.id })
@@ -74,7 +77,6 @@ export default function PatientListPage() {
       return
     }
 
-    // No existing user — create a new patient auth account
     const { data, error: authError } = await supabase.auth.signUp({
       email: inviteEmail,
       password: crypto.randomUUID().slice(0, 16),
@@ -108,66 +110,71 @@ export default function PatientListPage() {
   return (
     <div className="min-h-screen p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">My Patients</h1>
-        <button
+        <h1 className="text-3xl font-bold text-foreground">My Patients</h1>
+        <Button
+          size="sm"
+          variant={showInvite ? 'outline' : 'default'}
           onClick={() => setShowInvite(!showInvite)}
-          className="min-h-[48px] px-5 bg-brand-600 text-white text-lg font-semibold rounded-xl"
         >
-          {showInvite ? 'Cancel' : '+ Add Patient'}
-        </button>
+          {showInvite ? <><X className="size-5" /> Cancel</> : <><Plus className="size-5" /> Add Patient</>}
+        </Button>
       </div>
 
       {showInvite && (
-        <form onSubmit={handleInvite} className="card mb-6 space-y-4">
-          <div>
-            <label htmlFor="patientName" className="block text-lg font-medium text-gray-700 mb-1">
-              Patient's Full Name
-            </label>
-            <input
-              id="patientName"
-              type="text"
-              required
-              value={inviteName}
-              onChange={(e) => setInviteName(e.target.value)}
-              className="w-full min-h-touch rounded-xl border-2 border-gray-300 px-4 text-lg focus:border-brand-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label htmlFor="patientEmail" className="block text-lg font-medium text-gray-700 mb-1">
-              Patient's Email
-            </label>
-            <input
-              id="patientEmail"
-              type="email"
-              required
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              className="w-full min-h-touch rounded-xl border-2 border-gray-300 px-4 text-lg focus:border-brand-500 focus:outline-none"
-            />
-          </div>
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <form onSubmit={handleInvite} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="patientName">Patient's Full Name</Label>
+                <Input
+                  id="patientName"
+                  type="text"
+                  required
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patientEmail">Patient's Email</Label>
+                <Input
+                  id="patientEmail"
+                  type="email"
+                  required
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+              </div>
 
-          {inviteError && <p className="text-lg text-red-600 font-medium">{inviteError}</p>}
+              {inviteError && <p className="text-lg text-destructive font-medium">{inviteError}</p>}
 
-          <button type="submit" disabled={inviting} className="btn-primary">
-            {inviting ? 'Adding...' : 'Add Patient'}
-          </button>
-        </form>
+              <Button type="submit" disabled={inviting} className="w-full">
+                {inviting ? 'Adding...' : 'Add Patient'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {loading ? (
-        <p className="text-lg text-gray-500">Loading...</p>
+        <p className="text-lg text-muted-foreground">Loading...</p>
       ) : patients.length === 0 ? (
-        <p className="text-lg text-gray-400">No patients yet. Add your first patient above.</p>
+        <div className="text-center py-12">
+          <Users className="size-12 mx-auto text-muted-foreground/50 mb-4" />
+          <p className="text-lg text-muted-foreground">No patients yet. Add your first patient above.</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {patients.map((patient) => (
-            <Link
-              key={patient.id}
-              to={`/patients/${patient.id}`}
-              className="card block hover:border-brand-300 transition-colors"
-            >
-              <h2 className="text-2xl font-bold text-gray-900">{patient.full_name}</h2>
-              <p className="text-lg text-gray-500">{patient.email}</p>
+            <Link key={patient.id} to={`/patients/${patient.id}`}>
+              <Card className="hover:border-primary/30 transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground">{patient.full_name}</h2>
+                    <p className="text-lg text-muted-foreground">{patient.email}</p>
+                  </div>
+                  <ChevronRight className="size-6 text-muted-foreground" />
+                </div>
+              </Card>
             </Link>
           ))}
         </div>

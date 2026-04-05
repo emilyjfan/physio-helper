@@ -3,6 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import BackButton from '../../components/ui/BackButton'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Search, Trash2 } from 'lucide-react'
 import type { Exercise } from '../../lib/types'
 
 interface PlanExerciseEntry {
@@ -62,14 +68,12 @@ export default function PlanBuilderPage() {
     if (selectedExercises.length === 0) return
     setSaving(true)
 
-    // Deactivate any existing active plans for this patient
     await supabase
       .from('plans')
       .update({ is_active: false })
       .eq('patient_id', patientId!)
       .eq('is_active', true)
 
-    // Create the plan
     const { data: plan, error: planError } = await supabase
       .from('plans')
       .insert({
@@ -87,7 +91,6 @@ export default function PlanBuilderPage() {
       return
     }
 
-    // Insert plan exercises
     const planExercises = selectedExercises.map((entry, index) => ({
       plan_id: plan.id,
       exercise_id: entry.exercise.id,
@@ -107,151 +110,146 @@ export default function PlanBuilderPage() {
   return (
     <div className="min-h-screen p-6">
       <BackButton />
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Build a Plan</h1>
+      <h1 className="text-3xl font-bold text-foreground mb-6">Build a Plan</h1>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Plan title */}
-        <div>
-          <label htmlFor="planTitle" className="block text-lg font-medium text-gray-700 mb-1">
-            Plan Title
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="planTitle">Plan Title</Label>
+          <Input
             id="planTitle"
             type="text"
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Post knee replacement — Week 1"
-            className="w-full min-h-touch rounded-xl border-2 border-gray-300 px-4 text-lg focus:border-brand-500 focus:outline-none"
           />
         </div>
 
-        {/* Plan notes */}
-        <div>
-          <label htmlFor="planNotes" className="block text-lg font-medium text-gray-700 mb-1">
-            Notes for Patient (optional)
-          </label>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="planNotes">Notes for Patient (optional)</Label>
+          <Textarea
             id="planNotes"
             rows={2}
             value={planNotes}
             onChange={(e) => setPlanNotes(e.target.value)}
             placeholder="e.g. Do these exercises twice a day"
-            className="w-full rounded-xl border-2 border-gray-300 p-4 text-lg focus:border-brand-500 focus:outline-none"
           />
         </div>
 
-        {/* Add exercises */}
-        <div>
-          <label htmlFor="exSearch" className="block text-lg font-medium text-gray-700 mb-1">
-            Add Exercises
-          </label>
-          <input
-            id="exSearch"
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search your exercise library..."
-            className="w-full min-h-touch rounded-xl border-2 border-gray-300 px-4 text-lg focus:border-brand-500 focus:outline-none"
-          />
+        <div className="space-y-2">
+          <Label htmlFor="exSearch">Add Exercises</Label>
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+            <Input
+              id="exSearch"
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search your exercise library..."
+              className="pl-12"
+            />
+          </div>
           {search && filteredExercises.length > 0 && (
-            <div className="mt-2 border-2 border-gray-200 rounded-xl overflow-hidden">
+            <Card className="mt-2 p-0 overflow-hidden">
               {filteredExercises.slice(0, 5).map((ex) => (
                 <button
                   key={ex.id}
                   type="button"
                   onClick={() => addExercise(ex)}
-                  className="w-full text-left px-4 py-3 text-lg hover:bg-brand-50 border-b border-gray-100 last:border-0"
+                  className="w-full text-left px-4 py-3 text-lg hover:bg-accent border-b border-border last:border-0 transition-colors"
                 >
                   {ex.name}
                 </button>
               ))}
-            </div>
+            </Card>
           )}
           {search && filteredExercises.length === 0 && (
-            <p className="mt-2 text-base text-gray-400">No matching exercises found.</p>
+            <p className="mt-2 text-base text-muted-foreground">No matching exercises found.</p>
           )}
         </div>
 
-        {/* Selected exercises */}
         {selectedExercises.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900">Exercises in Plan</h2>
+            <h2 className="text-2xl font-bold text-foreground">Exercises in Plan</h2>
             {selectedExercises.map((entry, index) => (
-              <div key={entry.exercise.id} className="card">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {index + 1}. {entry.exercise.name}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => removeExercise(index)}
-                    className="text-lg text-red-500 font-medium min-h-[48px] min-w-[48px] flex items-center justify-center"
-                  >
-                    Remove
-                  </button>
-                </div>
+              <Card key={entry.exercise.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-xl">
+                      {index + 1}. {entry.exercise.name}
+                    </CardTitle>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeExercise(index)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="size-5" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="space-y-1">
+                      <Label className="text-sm">Sets</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={entry.sets}
+                        onChange={(e) => updateEntry(index, { sets: parseInt(e.target.value) || 1 })}
+                        className="text-center"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm">Reps</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={entry.reps}
+                        onChange={(e) => updateEntry(index, { reps: parseInt(e.target.value) || 1 })}
+                        className="text-center"
+                      />
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Sets</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={entry.sets}
-                      onChange={(e) => updateEntry(index, { sets: parseInt(e.target.value) || 1 })}
-                      className="w-full min-h-[56px] rounded-xl border-2 border-gray-300 px-4 text-lg text-center focus:border-brand-500 focus:outline-none"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-sm">Hold (seconds)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={entry.hold_seconds}
+                        onChange={(e) => updateEntry(index, { hold_seconds: e.target.value })}
+                        placeholder="—"
+                        className="text-center"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm">Notes</Label>
+                      <Input
+                        type="text"
+                        value={entry.notes}
+                        onChange={(e) => updateEntry(index, { notes: e.target.value })}
+                        placeholder="Optional"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Reps</label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={entry.reps}
-                      onChange={(e) => updateEntry(index, { reps: parseInt(e.target.value) || 1 })}
-                      className="w-full min-h-[56px] rounded-xl border-2 border-gray-300 px-4 text-lg text-center focus:border-brand-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Hold (seconds)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={entry.hold_seconds}
-                      onChange={(e) => updateEntry(index, { hold_seconds: e.target.value })}
-                      placeholder="—"
-                      className="w-full min-h-[56px] rounded-xl border-2 border-gray-300 px-4 text-lg text-center focus:border-brand-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Notes</label>
-                    <input
-                      type="text"
-                      value={entry.notes}
-                      onChange={(e) => updateEntry(index, { notes: e.target.value })}
-                      placeholder="Optional"
-                      className="w-full min-h-[56px] rounded-xl border-2 border-gray-300 px-4 text-lg focus:border-brand-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={saving || selectedExercises.length === 0}
-          className="btn-primary"
+          className="w-full"
         >
           {saving ? 'Saving...' : 'Save Plan'}
-        </button>
+        </Button>
       </form>
     </div>
   )

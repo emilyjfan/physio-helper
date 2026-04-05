@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { ClipboardList, Play, CheckCircle2 } from 'lucide-react'
 import type { Plan, PlanExercise, Exercise } from '../../lib/types'
 
 interface PlanExerciseWithDetails extends PlanExercise {
@@ -20,7 +23,6 @@ export default function PatientHomePage() {
 
   useEffect(() => {
     async function load() {
-      // Fetch active plan with exercises
       const { data } = await supabase
         .from('plans')
         .select('*, plan_exercises(*, exercises(*))')
@@ -31,7 +33,6 @@ export default function PatientHomePage() {
       if (data) {
         setPlan(data as ActivePlan)
 
-        // Check if already completed a session today
         const today = new Date().toISOString().split('T')[0]
         const { data: sessions } = await supabase
           .from('sessions')
@@ -52,7 +53,7 @@ export default function PatientHomePage() {
   if (loading) {
     return (
       <div className="min-h-screen p-6">
-        <p className="text-xl text-gray-500">Loading...</p>
+        <p className="text-xl text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -60,12 +61,15 @@ export default function PatientHomePage() {
   if (!plan) {
     return (
       <div className="min-h-screen p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Today's Exercises</h1>
-        <div className="card">
-          <p className="text-xl text-gray-500">
-            No exercise plan yet. Your physiotherapist will set one up for you.
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-4">Today's Exercises</h1>
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <ClipboardList className="size-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-xl text-muted-foreground">
+              No exercise plan yet. Your physiotherapist will set one up for you.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -74,45 +78,51 @@ export default function PatientHomePage() {
 
   return (
     <div className="min-h-screen p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-1">Today's Exercises</h1>
-      <p className="text-lg text-gray-500 mb-6">{plan.title}</p>
+      <h1 className="text-3xl font-bold text-foreground mb-1">Today's Exercises</h1>
+      <p className="text-lg text-muted-foreground mb-6">{plan.title}</p>
       {plan.notes && (
-        <p className="text-base text-gray-600 bg-brand-50 rounded-xl p-4 mb-6">{plan.notes}</p>
+        <Card className="mb-6 bg-accent border-accent">
+          <p className="text-base text-accent-foreground">{plan.notes}</p>
+        </Card>
       )}
 
       {todayCompleted && (
-        <div className="bg-brand-50 border-2 border-brand-200 rounded-2xl p-5 mb-6 text-center">
-          <p className="text-2xl font-bold text-brand-700">Done for today!</p>
-          <p className="text-lg text-brand-600 mt-1">You already completed your exercises. Great work!</p>
-        </div>
+        <Card className="mb-6 bg-brand-50 border-brand-200 border-2">
+          <div className="text-center">
+            <CheckCircle2 className="size-10 mx-auto text-brand-600 mb-2" />
+            <p className="text-2xl font-bold text-brand-700">Done for today!</p>
+            <p className="text-lg text-brand-600 mt-1">You already completed your exercises. Great work!</p>
+          </div>
+        </Card>
       )}
 
       <div className="space-y-4 mb-6">
         {sortedExercises.map((pe, index) => (
-          <div key={pe.id} className="card">
+          <Card key={pe.id}>
             <div className="flex items-start gap-4">
-              <span className="text-2xl font-bold text-brand-600 mt-1">{index + 1}</span>
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                <span className="text-xl font-bold text-primary">{index + 1}</span>
+              </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900">{pe.exercises.name}</h2>
-                <p className="text-lg text-gray-600 mt-1">
+                <h2 className="text-2xl font-bold text-foreground">{pe.exercises.name}</h2>
+                <p className="text-lg text-muted-foreground mt-1">
                   {pe.sets} set{pe.sets !== 1 && 's'} x {pe.reps} rep{pe.reps !== 1 && 's'}
                   {pe.hold_seconds ? ` — hold ${pe.hold_seconds}s` : ''}
                 </p>
                 {pe.notes && (
-                  <p className="text-base text-gray-500 mt-1">{pe.notes}</p>
+                  <p className="text-base text-muted-foreground/80 mt-1 italic">{pe.notes}</p>
                 )}
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {!todayCompleted && (
-        <Link
-          to={`/session/${sortedExercises[0]?.id}`}
-          className="btn-primary"
-        >
-          Start Exercises
+        <Link to={`/session/${sortedExercises[0]?.id}`}>
+          <Button className="w-full">
+            <Play className="size-5" /> Start Exercises
+          </Button>
         </Link>
       )}
     </div>

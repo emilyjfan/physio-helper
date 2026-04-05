@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import BackButton from '../../components/ui/BackButton'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { ClipboardList, CalendarDays } from 'lucide-react'
 import type { User, Plan, PlanExercise, Exercise, Session } from '../../lib/types'
 
 interface PlanWithExercises extends Plan {
@@ -43,7 +48,7 @@ export default function PatientDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen p-6">
-        <p className="text-lg text-gray-500">Loading...</p>
+        <p className="text-lg text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -52,7 +57,7 @@ export default function PatientDetailPage() {
     return (
       <div className="min-h-screen p-6">
         <BackButton />
-        <p className="text-lg text-red-600">Patient not found.</p>
+        <p className="text-lg text-destructive">Patient not found.</p>
       </div>
     )
   }
@@ -62,75 +67,83 @@ export default function PatientDetailPage() {
   return (
     <div className="min-h-screen p-6">
       <BackButton />
-      <h1 className="text-3xl font-bold text-gray-900 mb-1">{patient.full_name}</h1>
-      <p className="text-lg text-gray-500 mb-6">{patient.email}</p>
+      <h1 className="text-3xl font-bold text-foreground mb-1">{patient.full_name}</h1>
+      <p className="text-lg text-muted-foreground mb-6">{patient.email}</p>
 
       {/* Active Plan */}
       <section className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">Active Plan</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-3">Active Plan</h2>
         {activePlan ? (
-          <div className="card">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{activePlan.title}</h3>
-            {activePlan.notes && <p className="text-base text-gray-600 mb-3">{activePlan.notes}</p>}
-            <p className="text-base text-gray-500 mb-3">
-              {activePlan.plan_exercises.length} exercise{activePlan.plan_exercises.length !== 1 && 'es'}
-            </p>
-            <ul className="space-y-2">
-              {activePlan.plan_exercises
-                .sort((a, b) => a.order_index - b.order_index)
-                .map((pe) => (
-                  <li key={pe.id} className="text-base text-gray-700">
-                    <span className="font-medium">{pe.exercises.name}</span>
-                    {' — '}
-                    {pe.sets} set{pe.sets !== 1 && 's'} x {pe.reps} rep{pe.reps !== 1 && 's'}
-                    {pe.hold_seconds ? ` (${pe.hold_seconds}s hold)` : ''}
-                  </li>
-                ))}
-            </ul>
-          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{activePlan.title}</CardTitle>
+                <Badge variant="default">Active</Badge>
+              </div>
+              {activePlan.notes && <CardDescription>{activePlan.notes}</CardDescription>}
+            </CardHeader>
+            <CardContent>
+              <p className="text-base text-muted-foreground mb-3">
+                {activePlan.plan_exercises.length} exercise{activePlan.plan_exercises.length !== 1 && 'es'}
+              </p>
+              <ul className="space-y-2">
+                {activePlan.plan_exercises
+                  .sort((a, b) => a.order_index - b.order_index)
+                  .map((pe) => (
+                    <li key={pe.id} className="text-base text-foreground/80">
+                      <span className="font-medium">{pe.exercises.name}</span>
+                      {' — '}
+                      {pe.sets} set{pe.sets !== 1 && 's'} x {pe.reps} rep{pe.reps !== 1 && 's'}
+                      {pe.hold_seconds ? ` (${pe.hold_seconds}s hold)` : ''}
+                    </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="card">
-            <p className="text-lg text-gray-400 mb-4">No active plan.</p>
-            <Link
-              to={`/patients/${patientId}/plans/new`}
-              className="btn-primary inline-flex"
-            >
-              Create a Plan
-            </Link>
-          </div>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <ClipboardList className="size-12 mx-auto text-muted-foreground/50 mb-4" />
+              <p className="text-lg text-muted-foreground mb-4">No active plan.</p>
+              <Link to={`/patients/${patientId}/plans/new`}>
+                <Button className="w-full">Create a Plan</Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
       </section>
 
-      {/* Create plan button if they already have an active plan */}
       {activePlan && (
-        <Link
-          to={`/patients/${patientId}/plans/new`}
-          className="btn-secondary mb-8 inline-flex"
-        >
-          Create New Plan
+        <Link to={`/patients/${patientId}/plans/new`}>
+          <Button variant="outline" className="w-full mb-8">Create New Plan</Button>
         </Link>
       )}
 
+      <Separator className="mb-8" />
+
       {/* Recent Sessions */}
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">Recent Sessions</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-3">Recent Sessions</h2>
         {sessions.length === 0 ? (
-          <p className="text-lg text-gray-400">No sessions yet.</p>
+          <div className="text-center py-8">
+            <CalendarDays className="size-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-lg text-muted-foreground">No sessions yet.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {sessions.map((s) => (
-              <div key={s.id} className="card flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-medium text-gray-900">
+              <Card key={s.id}>
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-medium text-foreground">
                     {new Date(s.started_at).toLocaleDateString('en-US', {
                       weekday: 'short', month: 'short', day: 'numeric',
                     })}
                   </p>
+                  <Badge variant={s.completed_at ? 'default' : 'secondary'}>
+                    {s.completed_at ? 'Completed' : 'Incomplete'}
+                  </Badge>
                 </div>
-                <span className={`text-lg font-semibold ${s.completed_at ? 'text-brand-600' : 'text-yellow-600'}`}>
-                  {s.completed_at ? 'Completed' : 'Incomplete'}
-                </span>
-              </div>
+              </Card>
             ))}
           </div>
         )}

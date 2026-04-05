@@ -3,18 +3,45 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 15% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 10%;
+    --primary: 155 63% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 30% 96%;
+    --secondary-foreground: 155 60% 22%;
+    --muted: 210 15% 95%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 150 30% 96%;
+    --accent-foreground: 155 60% 22%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 155 63% 27%;
+    --radius: 1rem;
+  }
+
   html {
     font-size: 100%;
   }
 
   body {
-    @apply text-base text-gray-900 bg-gray-50 antialiased;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     margin: 0;
   }
 
+  * {
+    @apply border-border;
+  }
+
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-brand-500;
+    @apply outline-2 outline-offset-2 outline-ring;
   }
 }
 
@@ -22,7 +49,7 @@
   /* Primary action button — large touch target, high contrast */
   .btn-primary {
     @apply flex items-center justify-center w-full min-h-touch
-           bg-brand-600 text-white text-xl font-semibold
+           bg-primary text-primary-foreground text-xl font-semibold
            rounded-2xl px-6
            active:bg-brand-700
            focus-visible:ring-4 focus-visible:ring-brand-300
@@ -34,16 +61,11 @@
   .btn-secondary {
     @apply flex items-center justify-center w-full min-h-touch
            bg-white text-brand-700 text-xl font-semibold
-           border-2 border-brand-600
+           border-2 border-primary
            rounded-2xl px-6
            active:bg-brand-50
            focus-visible:ring-4 focus-visible:ring-brand-300
            disabled:opacity-50 disabled:cursor-not-allowed
            transition-colors;
-  }
-
-  /* Card container */
-  .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
   }
 }

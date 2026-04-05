@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Volume2, CheckCircle2, ArrowRight, Flag } from 'lucide-react'
 import type { Plan, PlanExercise, Exercise } from '../../lib/types'
 
 interface PlanExerciseWithDetails extends PlanExercise {
@@ -22,7 +26,6 @@ export default function ExerciseSessionPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Load the active plan
   useEffect(() => {
     async function load() {
       const { data } = await supabase
@@ -37,7 +40,6 @@ export default function ExerciseSessionPage() {
         planData.plan_exercises.sort((a, b) => a.order_index - b.order_index)
         setPlan(planData)
 
-        // Create a session
         const { data: session } = await supabase
           .from('sessions')
           .insert({ plan_id: planData.id, patient_id: user!.id })
@@ -57,11 +59,9 @@ export default function ExerciseSessionPage() {
   const isLastExercise = exerciseIndex === totalExercises - 1
   const isLastSet = currentPlanExercise ? setsCompleted + 1 >= currentPlanExercise.sets : false
 
-  // Log completed exercise and move to next
   const logAndAdvance = useCallback(async () => {
     if (!sessionId || !currentPlanExercise) return
 
-    // Log this exercise
     await supabase.from('session_exercise_logs').insert({
       session_id: sessionId,
       plan_exercise_id: currentPlanExercise.id,
@@ -69,7 +69,6 @@ export default function ExerciseSessionPage() {
     })
 
     if (isLastExercise) {
-      // Mark session complete
       await supabase
         .from('sessions')
         .update({ completed_at: new Date().toISOString() })
@@ -92,7 +91,6 @@ export default function ExerciseSessionPage() {
     }
   }
 
-  // Read-aloud
   function speakInstructions() {
     if (!currentExercise) return
     window.speechSynthesis.cancel()
@@ -107,7 +105,7 @@ export default function ExerciseSessionPage() {
   if (loading) {
     return (
       <div className="min-h-screen p-6 flex items-center justify-center">
-        <p className="text-xl text-gray-500">Loading...</p>
+        <p className="text-xl text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -115,57 +113,58 @@ export default function ExerciseSessionPage() {
   if (!plan || !currentExercise || !currentPlanExercise) {
     return (
       <div className="min-h-screen p-6">
-        <p className="text-xl text-gray-500">No exercises found.</p>
+        <p className="text-xl text-muted-foreground">No exercises found.</p>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen p-6 flex flex-col">
-      {/* Progress bar */}
+      {/* Progress */}
       <div className="mb-4">
-        <p className="text-sm text-gray-500 mb-1">
+        <p className="text-sm text-muted-foreground mb-2">
           Exercise {exerciseIndex + 1} of {totalExercises}
         </p>
-        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-brand-500 rounded-full transition-all duration-300"
-            style={{ width: `${((exerciseIndex) / totalExercises) * 100}%` }}
-          />
-        </div>
+        <Progress value={(exerciseIndex / totalExercises) * 100} className="h-3" />
       </div>
 
       {/* Exercise name */}
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">{currentExercise.name}</h1>
+      <h1 className="text-3xl font-bold text-foreground mb-2">{currentExercise.name}</h1>
 
       {currentExercise.description && (
-        <p className="text-lg text-gray-600 mb-4">{currentExercise.description}</p>
+        <p className="text-lg text-muted-foreground mb-4">{currentExercise.description}</p>
       )}
 
-      {/* Read aloud button */}
-      <button
+      {/* Read aloud */}
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={speakInstructions}
-        className="min-h-[48px] px-4 text-lg text-brand-600 font-medium flex items-center gap-2 mb-4 self-start"
+        className="self-start mb-4 text-primary"
       >
-        🔊 Read Aloud
-      </button>
+        <Volume2 className="size-5" /> Read Aloud
+      </Button>
 
       {/* Instructions */}
-      <div className="card mb-6 flex-1">
-        <h2 className="text-xl font-bold text-gray-800 mb-3">Steps</h2>
-        <ol className="space-y-3">
-          {currentExercise.instructions.map((step, i) => (
-            <li key={i} className="flex gap-3">
-              <span className="text-xl font-bold text-brand-500 shrink-0">{i + 1}.</span>
-              <span className="text-xl text-gray-800">{step}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      <Card className="mb-6 flex-1">
+        <CardHeader>
+          <CardTitle className="text-xl">Steps</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ol className="space-y-3">
+            {currentExercise.instructions.map((step, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="text-xl font-bold text-primary shrink-0">{i + 1}.</span>
+                <span className="text-xl text-foreground/90">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
 
       {/* Set counter */}
       <div className="mb-6">
-        <p className="text-xl text-center text-gray-700 mb-3">
+        <p className="text-xl text-center text-foreground mb-3">
           <span className="font-bold">{currentPlanExercise.reps}</span> reps per set
           {currentPlanExercise.hold_seconds
             ? ` — hold ${currentPlanExercise.hold_seconds} seconds`
@@ -175,34 +174,34 @@ export default function ExerciseSessionPage() {
           {Array.from({ length: currentPlanExercise.sets }).map((_, i) => (
             <div
               key={i}
-              className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-colors
                 ${i < setsCompleted
-                  ? 'bg-brand-500 text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : i === setsCompleted
-                    ? 'bg-brand-100 text-brand-700 border-2 border-brand-500'
-                    : 'bg-gray-200 text-gray-400'
+                    ? 'bg-primary/10 text-primary border-2 border-primary'
+                    : 'bg-muted text-muted-foreground'
                 }`}
             >
-              {i < setsCompleted ? '✓' : i + 1}
+              {i < setsCompleted ? <CheckCircle2 className="size-6" /> : i + 1}
             </div>
           ))}
         </div>
-        <p className="text-lg text-center text-gray-500">
+        <p className="text-lg text-center text-muted-foreground">
           Set {setsCompleted + 1} of {currentPlanExercise.sets}
         </p>
       </div>
 
       {/* Action button */}
-      <button onClick={handleSetDone} className="btn-primary">
+      <Button onClick={handleSetDone} className="w-full">
         {isLastSet
           ? isLastExercise
-            ? 'Finish Exercises'
-            : 'Done — Next Exercise'
-          : 'Done — Next Set'}
-      </button>
+            ? <><Flag className="size-5" /> Finish Exercises</>
+            : <><ArrowRight className="size-5" /> Done — Next Exercise</>
+          : <><CheckCircle2 className="size-5" /> Done — Next Set</>}
+      </Button>
 
       {currentPlanExercise.notes && (
-        <p className="text-base text-gray-500 mt-4 text-center italic">
+        <p className="text-base text-muted-foreground mt-4 text-center italic">
           Note from your physio: {currentPlanExercise.notes}
         </p>
       )}
